@@ -1,46 +1,47 @@
 import javax.swing.*;
 import java.awt.*;
 
+
 public class FifteenPuzzle extends JFrame {
-    private final Dimension defaultSize;
-    private final Dimension fancySize;
+    private final Dimension defaultFrameSize;
     private final Font defaultFont;
-    private boolean isDecorated = true;
-    private JFrame rootFrame = this;
+    private final JFrame rootFrame = this;
 
     {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenHeight = screenSize.height;
-        defaultSize = new Dimension(screenHeight / 3, screenHeight / 3);
-        if (screenHeight > 600) fancySize = new Dimension(600, 600);
-        else fancySize = defaultSize;
+        defaultFrameSize = new Dimension(screenHeight / 3, screenHeight / 3);
         defaultFont = new Font("Arial", Font.BOLD, 16);
     }
 
-    public FifteenPuzzle() {
+    public FifteenPuzzle(int squareSide) {
         super("Fifteen Puzzle");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setMinimumSize(defaultSize);
-        setMaximumSize(fancySize);
-        setSize(defaultSize);
+        setSize(defaultFrameSize);
         setResizable(false);
         setLocationRelativeTo(null);
         setUndecorated(false);
-        setLayout(new GridLayout(4, 4));
-        JButton[][] buttonGrid = new JButton[4][4];
+        setLayout(new GridLayout(squareSide, squareSide));
+        JButton[][] buttonGrid = new JButton[squareSide][squareSide];
         setFont(defaultFont);
 
         setJMenuBar(menuBar());
 
 
-        int iterator = 1;
+        int iterator = 0;
         for (int row = 0; row < buttonGrid.length; row++) {
-            for (int col = 0; col < buttonGrid[row].length && iterator < buttonGrid.length * buttonGrid[row].length; col++) {
+            for (int col = 0; col < buttonGrid[row].length; col++) {
                 buttonGrid[row][col] = new JButton(String.valueOf(iterator));
+                buttonGrid[row][col].setBackground(Color.YELLOW);
                 ++iterator;
                 add(buttonGrid[row][col]);
+                buttonGrid[row][col].addActionListener(e -> {
+                    //TODO логика проверки соседних клеток и перемещение
+                });
             }
         }
+        buttonGrid[0][0].setName("empty");
+        buttonGrid[0][0].setVisible(false);
 
         Utils.setFontForEach(defaultFont, rootFrame, getContentPane());
         setVisible(true);
@@ -51,18 +52,25 @@ public class FifteenPuzzle extends JFrame {
 
         JMenuBar jMenuBar = new JMenuBar();
         JMenu menuFile = new JMenu("File");
+        JMenu screenSizeMenu = new JMenu("Screen size");
         JMenu fontsMenu = new JMenu("Font");
-        jMenuBar.add(menuFile);
-        jMenuBar.add(fontsMenu);
+        JMenu helpMenu = new JMenu("Help");
+        Utils.addAllTo(jMenuBar, menuFile, screenSizeMenu, fontsMenu, helpMenu);
 
         /* File menu */
         JMenuItem startMenuItem = new JMenuItem("New game");
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> System.exit(0));
-        menuFile.add(startMenuItem);
-        menuFile.addSeparator();
-        menuFile.add(exitMenuItem);
+        Utils.addAllTo(menuFile, startMenuItem, new JPopupMenu.Separator(), exitMenuItem);
 
+        /* Screen size menu*/
+        JMenuItem defaultSize = new JMenuItem((int) defaultFrameSize.getWidth() + "x" + (int) defaultFrameSize.getHeight());
+        JMenuItem sixHundred = new JMenuItem("600x600");
+        JMenuItem eightHundred = new JMenuItem("800x800");
+        Utils.addAllTo(screenSizeMenu, defaultSize, sixHundred, eightHundred);
+        defaultSize.addActionListener(e -> setNewScreenSize(defaultFrameSize));
+        sixHundred.addActionListener(e -> setNewScreenSize(600, 600));
+        eightHundred.addActionListener(e -> setNewScreenSize(800, 800));
 
         /* Font menu */
         JMenu fontFamily = new JMenu("Font family");
@@ -125,6 +133,29 @@ public class FifteenPuzzle extends JFrame {
             }
         }
 
+        JMenuItem about = new JMenuItem("About");
+        JMenuItem howToPlay = new JMenuItem("How to play");
+        Utils.addAllTo(helpMenu, howToPlay, new JPopupMenu.Separator(), about);
+        /* Java 14 preview text block */
+        String aboutMSG = """
+                This program created by Aleksey Vokhmin.
+                ITMO University.
+                2020
+                """;
+        about.addActionListener(e -> JOptionPane.showMessageDialog(null, aboutMSG, about.getText(), JOptionPane.QUESTION_MESSAGE));
+        howToPlay.addActionListener(e -> JOptionPane.showMessageDialog(null, "I don't know ¯\\_(ツ)_/¯", howToPlay.getText(), JOptionPane.ERROR_MESSAGE));
+
         return jMenuBar;
+    }
+
+    private void setNewScreenSize(int width, int height) {
+        setNewScreenSize(new Dimension(width, height));
+    }
+
+    private void setNewScreenSize(Dimension dimension) {
+        this.dispose();
+        this.setSize(dimension);
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
     }
 }
