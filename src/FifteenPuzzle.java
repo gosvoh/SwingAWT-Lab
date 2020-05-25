@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * Игра пятнашки (15-puzzle), созданная на основе JFrame и двумерного массива JButton
+ * Игра пятнашки (15-puzzle), созданная на основе JFrame и двумерного массива JButton.
+ * Код написан с использованием новых функций превью 14 версии языка Java
  *
  * @author Алексей "gosvoh" Вохмин <a href="https://github.com/gosvoh/SwingAWT-Lab">GitHub link</a>
  */
