@@ -34,23 +34,41 @@ public class Utils {
         }
     }
 
+    /**
+     * Обновить шрифт для всех указанных, а так же дочерних компонентов
+     *
+     * @param name имя шрифта
+     * @param components компоненты
+     */
     public static void updateFontFamily(String name, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(name, currentFont.getStyle(), currentFont.getSize()), components);
     }
 
+    /**
+     * Обновить стиль шрифта для всех указанных, а так же дочерних компонентов
+     *
+     * @param style имя шрифта
+     * @param components компоненты
+     */
     public static void updateFontStyle(int style, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(currentFont.getName(), style, currentFont.getSize()), components);
     }
 
+    /**
+     * Обновить размер шрифта для всех указанных, а так же дочерних компонентов
+     *
+     * @param size имя шрифта
+     * @param components компоненты
+     */
     public static void updateFontSize(int size, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(currentFont.getName(), currentFont.getStyle(), size), components);
     }
 
     /**
-     * Создать фонт по полученной ссылке
+     * Создать шрифт по полученной ссылке
      *
      * @param urlStr ссылка на фонт
      * @return фонт
