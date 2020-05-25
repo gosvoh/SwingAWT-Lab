@@ -37,19 +37,16 @@ public class Utils {
     public static void updateFontFamily(String name, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(name, currentFont.getStyle(), currentFont.getSize()), components);
-        System.out.println("Updated font to " + name);
     }
 
     public static void updateFontStyle(int style, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(currentFont.getName(), style, currentFont.getSize()), components);
-        System.out.println("Updated font to " + style);
     }
 
     public static void updateFontSize(int size, Component... components) {
         Font currentFont = components[0].getFont();
         setFontForEach(new Font(currentFont.getName(), currentFont.getStyle(), size), components);
-        System.out.println("Updated font to " + size);
     }
 
     /**
