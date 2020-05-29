@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -7,7 +8,6 @@ import java.util.Collections;
 
 /**
  * Игра пятнашки (15-puzzle), созданная на основе JFrame и двумерного массива JButton.
- * Код написан с использованием новых функций превью 14 версии языка Java
  *
  * @author Алексей "gosvoh" Вохмин <a href="https://github.com/gosvoh/SwingAWT-Lab">GitHub link</a>
  */
@@ -107,7 +107,8 @@ public class FifteenPuzzle extends JFrame {
             buttonGrid[row][col] = new JButton(String.valueOf(listOfIndexes.get(index)));
             buttonGrid[row][col].setBackground(Color.ORANGE);
             buttonGrid[row][col].setForeground(Color.BLUE);
-            buttonGrid[row][col].addActionListener(e -> swapWithEmpty(row, col));
+            buttonGrid[row][col].setFocusable(false);
+            buttonGrid[row][col].addActionListener(e -> swapNearWithEmpty(row, col));
             add(buttonGrid[row][col]);
             // Пустая кнопка
             if (listOfIndexes.get(index) == 0) {
@@ -115,6 +116,9 @@ public class FifteenPuzzle extends JFrame {
                 buttonGrid[row][col].setVisible(false);
             }
         }
+
+        // Установка пустой кнопки в нижний правый угол
+        swapWithEmpty(_SQUARE_SIDE - 1, _SQUARE_SIDE - 1);
 
         // Прослушивание нажатия кнопок для перемещения пустого поля
         addKeyListener(new KeyAdapter() {
@@ -124,16 +128,16 @@ public class FifteenPuzzle extends JFrame {
                 int emptyCellCol = _emptyCell % _SQUARE_SIDE;
 
                 if (e.getKeyCode() == KeyEvent.VK_UP) {
-                    swapWithEmpty(emptyCellRow - 1, emptyCellCol);
+                    swapNearWithEmpty(emptyCellRow - 1, emptyCellCol);
                 }
                 if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    swapWithEmpty(emptyCellRow + 1, emptyCellCol);
+                    swapNearWithEmpty(emptyCellRow + 1, emptyCellCol);
                 }
                 if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    swapWithEmpty(emptyCellRow, emptyCellCol - 1);
+                    swapNearWithEmpty(emptyCellRow, emptyCellCol - 1);
                 }
                 if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    swapWithEmpty(emptyCellRow, emptyCellCol + 1);
+                    swapNearWithEmpty(emptyCellRow, emptyCellCol + 1);
                 }
             }
         });
@@ -170,7 +174,7 @@ public class FifteenPuzzle extends JFrame {
      * @param row строка
      * @param col столбец
      */
-    private void swapWithEmpty(int row, int col) {
+    private void swapNearWithEmpty(int row, int col) {
         // Если комбинация уже выигрышная, то пропускаем перемещение кнопки
         if (isWin())
             return;
@@ -182,14 +186,26 @@ public class FifteenPuzzle extends JFrame {
         boolean sameCol = (col == emptyCellCol);
         boolean canSwap = (sameRow || sameCol) && (colDif == 1 || rowDif == 1) && (row >= 0 && row < _SQUARE_SIDE) && (col >= 0 && col < _SQUARE_SIDE);
         if (canSwap) {
-            buttonGrid[emptyCellRow][emptyCellCol].setText(buttonGrid[row][col].getText());
-            buttonGrid[row][col].setText(String.valueOf(0));
-            buttonGrid[emptyCellRow][emptyCellCol].setVisible(true);
-            buttonGrid[row][col].setVisible(false);
-            _emptyCell = getIndex(row, col);
+            swapWithEmpty(row, col);
         }
         if (isWin())
             JOptionPane.showMessageDialog(null, "You win this game!", "You WIN!", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Поменять местами указанную кнопку с пустой
+     *
+     * @param row строка элемента
+     * @param col столбец элемента
+     */
+    private void swapWithEmpty(int row, int col) {
+        int emptyCellRow = _emptyCell / _SQUARE_SIDE;
+        int emptyCellCol = _emptyCell % _SQUARE_SIDE;
+        buttonGrid[emptyCellRow][emptyCellCol].setText(buttonGrid[row][col].getText());
+        buttonGrid[row][col].setText(String.valueOf(0));
+        buttonGrid[emptyCellRow][emptyCellCol].setVisible(true);
+        buttonGrid[row][col].setVisible(false);
+        _emptyCell = getIndex(row, col);
     }
 
     /**
@@ -236,7 +252,10 @@ public class FifteenPuzzle extends JFrame {
         JMenuItem startMenuItem = new JMenuItem("New game");
         JMenuItem getSolution = new JMenuItem("Solution");
         JMenuItem exitMenuItem = new JMenuItem("Exit");
+        Utils.addAllTo(menuFile, startMenuItem, getSolution, new JPopupMenu.Separator(), exitMenuItem);
+
         startMenuItem.addActionListener(e -> initializeBoard());
+        startMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
         getSolution.addActionListener(e -> {
             for (int index = 0; index < _FIELD_SIZE - 2; index++) {
                 int row = index / _SQUARE_SIDE;
@@ -251,7 +270,7 @@ public class FifteenPuzzle extends JFrame {
             buttonGrid[_SQUARE_SIDE - 1][_SQUARE_SIDE - 1].setVisible(true);
         });
         exitMenuItem.addActionListener(e -> System.exit(0));
-        Utils.addAllTo(menuFile, startMenuItem, getSolution, new JPopupMenu.Separator(), exitMenuItem);
+        exitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
 
         /* Screen size menu*/
         JMenuItem defaultSize = new JMenuItem("Default size " + (int) _DEFAULT_FRAME_SIZE.getHeight() + "x" + (int) _DEFAULT_FRAME_SIZE.getHeight());
@@ -307,24 +326,28 @@ public class FifteenPuzzle extends JFrame {
         });
         Utils.updateFontStyle(Font.ITALIC, italic);
         switch (getFont().getStyle()) {
-            case Font.PLAIN -> plain.setSelected(true);
-            case Font.BOLD -> bold.setSelected(true);
-            case Font.ITALIC -> italic.setSelected(true);
-            case Font.BOLD + Font.ITALIC -> {
+            case Font.PLAIN:
+                plain.setSelected(true);
+                break;
+            case Font.BOLD:
+                bold.setSelected(true);
+                break;
+            case Font.ITALIC:
+                italic.setSelected(true);
+                break;
+            case Font.BOLD + Font.ITALIC:
                 bold.setSelected(true);
                 italic.setSelected(true);
-            }
+                break;
         }
 
         JMenuItem about = new JMenuItem("About");
         JMenuItem howToPlay = new JMenuItem("How to play");
         Utils.addAllTo(helpMenu, howToPlay, new JPopupMenu.Separator(), about);
-        /* Java 14 preview text block */
-        String aboutMSG = """
-                This program created by Aleksey Vokhmin.
-                ITMO University.
-                2020
-                """;
+
+        String aboutMSG = "This program created by Aleksey Vokhmin.\n" +
+                          "ITMO University.\n" +
+                          "2020\n";
         about.addActionListener(e -> JOptionPane.showMessageDialog(null, aboutMSG, about.getText(), JOptionPane.QUESTION_MESSAGE));
         howToPlay.addActionListener(e -> JOptionPane.showMessageDialog(null, "I dunno ¯\\_(ツ)_/¯\nBut you can use mouse and arrows", howToPlay.getText(), JOptionPane.ERROR_MESSAGE));
 
@@ -348,7 +371,8 @@ public class FifteenPuzzle extends JFrame {
      */
     private void setNewScreenSize(Dimension dimension) {
         dispose();
-        setSize(dimension);
+        setPreferredSize(dimension);
+        pack();
         setLocationRelativeTo(null);
         setVisible(true);
     }
