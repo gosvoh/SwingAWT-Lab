@@ -9,6 +9,7 @@ import java.util.Collections;
 
 /**
  * Игра пятнашки (15-puzzle), созданная на основе JFrame и двумерного массива JButton.
+ * Чтобы запустить игру, достаточно вызвать стандартный конструктор класса
  *
  * @author Алексей "gosvoh" Вохмин <a href="https://github.com/gosvoh/SwingAWT-Lab">GitHub link</a>
  */
