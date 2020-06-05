@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -52,12 +53,16 @@ public class FifteenPuzzle extends JFrame {
      * Массив выигрышной комбинации
      */
     private final String[] _WIN_COMBINATION;
+    /**
+     * Главная панель с игровым полем
+     */
+    private JPanel _boardPanel;
 
     /**
      * Конструктор класса
      */
     public FifteenPuzzle() {
-        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(3, 3, 10, 1);
+        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(4, 3, 10, 1);
         JSpinner fieldSize = new JSpinner(spinnerNumberModel);
         JOptionPane.showMessageDialog(null, fieldSize, "Set square size", JOptionPane.QUESTION_MESSAGE);
         this._SQUARE_SIDE = Integer.parseInt(fieldSize.getValue().toString());
@@ -69,27 +74,26 @@ public class FifteenPuzzle extends JFrame {
             _WIN_COMBINATION[i - 1] = String.valueOf(i);
         buttonGrid = new JButton[_SQUARE_SIDE][_SQUARE_SIDE];
 
-        initializeBoard();
-    }
-
-    /**
-     * Метод инициализации поля
-     */
-    private void initializeBoard() {
-        // Если фрейм видим, то сохраняем состояния размера и стиля, освобождаем ресурсы и уаляем содержимое
-        if (isVisible()) {
-            _currentScreenSize = getSize();
-            _currentFont = getFont();
-            dispose();
-            getContentPane().removeAll();
-        }
-        setLayout(new GridLayout(_SQUARE_SIDE, _SQUARE_SIDE));
         setSize(_currentScreenSize);
         setFont(_currentFont);
         setJMenuBar(menuBar());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setLocationRelativeTo(null);
+        initializeBoard();
+        setVisible(true);
+    }
+
+    /**
+     * Метод инициализации поля
+     */
+    private void initializeBoard() {
+        if (_boardPanel != null) {
+            _currentFont = _boardPanel.getFont();
+            _boardPanel.setFocusable(false);
+            remove(_boardPanel);
+        }
+        _boardPanel = new JPanel(new GridLayout(_SQUARE_SIDE, _SQUARE_SIDE));
 
         // Создаём ArrayList типа Integer, чтобы было легче было рандомизировать поле
         ArrayList<Integer> listOfIndexes;
@@ -109,7 +113,7 @@ public class FifteenPuzzle extends JFrame {
             buttonGrid[row][col].setForeground(Color.BLUE);
             buttonGrid[row][col].setFocusable(false);
             buttonGrid[row][col].addActionListener(e -> swapNearWithEmpty(row, col));
-            add(buttonGrid[row][col]);
+            _boardPanel.add(buttonGrid[row][col]);
             // Пустая кнопка
             if (listOfIndexes.get(index) == 0) {
                 _emptyCell = index;
@@ -120,6 +124,10 @@ public class FifteenPuzzle extends JFrame {
         // Установка пустой кнопки в нижний правый угол
         swapWithEmpty(_SQUARE_SIDE - 1, _SQUARE_SIDE - 1);
 
+        // Удаление всех действий при нижатии кнопок
+        for (KeyListener keyListener : getKeyListeners()) {
+            removeKeyListener(keyListener);
+        }
         // Прослушивание нажатия кнопок для перемещения пустого поля
         addKeyListener(new KeyAdapter() {
             @Override
@@ -128,24 +136,24 @@ public class FifteenPuzzle extends JFrame {
                 int emptyCellCol = _emptyCell % _SQUARE_SIDE;
 
                 if (e.getKeyCode() == KeyEvent.VK_UP) {
-                    swapNearWithEmpty(emptyCellRow - 1, emptyCellCol);
-                }
-                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
                     swapNearWithEmpty(emptyCellRow + 1, emptyCellCol);
                 }
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    swapNearWithEmpty(emptyCellRow - 1, emptyCellCol);
+                }
                 if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    swapNearWithEmpty(emptyCellRow, emptyCellCol - 1);
+                    swapNearWithEmpty(emptyCellRow, emptyCellCol + 1);
                 }
                 if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    swapNearWithEmpty(emptyCellRow, emptyCellCol + 1);
+                    swapNearWithEmpty(emptyCellRow, emptyCellCol - 1);
                 }
             }
         });
         // Без фокуса не работает прослушивание кнопок
         setFocusable(true);
 
-        Utils.setFontForEach(_currentFont, this);
-        setVisible(true);
+        add(_boardPanel);
+        Utils.setFontForEach(_currentFont, _boardPanel);
     }
 
     /**
@@ -247,6 +255,10 @@ public class FifteenPuzzle extends JFrame {
         JMenu fontsMenu = new JMenu("Font");
         JMenu helpMenu = new JMenu("Help");
         Utils.addAllTo(jMenuBar, menuFile, screenSizeMenu, fontsMenu, helpMenu);
+        menuFile.setMnemonic(KeyEvent.VK_F);
+        screenSizeMenu.setMnemonic(KeyEvent.VK_S);
+        fontsMenu.setMnemonic(KeyEvent.VK_T);
+        helpMenu.setMnemonic(KeyEvent.VK_H);
 
         /* File menu */
         JMenuItem startMenuItem = new JMenuItem("New game");
@@ -256,6 +268,7 @@ public class FifteenPuzzle extends JFrame {
 
         startMenuItem.addActionListener(e -> initializeBoard());
         startMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
+        startMenuItem.setMnemonic(KeyEvent.VK_N);
         getSolution.addActionListener(e -> {
             for (int index = 0; index < _FIELD_SIZE - 2; index++) {
                 int row = index / _SQUARE_SIDE;
@@ -269,8 +282,11 @@ public class FifteenPuzzle extends JFrame {
             buttonGrid[_SQUARE_SIDE - 1][_SQUARE_SIDE - 1].setText(String.valueOf(_FIELD_SIZE - 1));
             buttonGrid[_SQUARE_SIDE - 1][_SQUARE_SIDE - 1].setVisible(true);
         });
+        getSolution.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+        getSolution.setMnemonic(KeyEvent.VK_S);
         exitMenuItem.addActionListener(e -> System.exit(0));
-        exitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        exitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK));
+        exitMenuItem.setMnemonic(KeyEvent.VK_X);
 
         /* Screen size menu*/
         JMenuItem defaultSize = new JMenuItem("Default size " + (int) _DEFAULT_FRAME_SIZE.getHeight() + "x" + (int) _DEFAULT_FRAME_SIZE.getHeight());
@@ -290,9 +306,8 @@ public class FifteenPuzzle extends JFrame {
         /* Font family items*/
         for (String fontName : fontNames) {
             JMenuItem item = new JMenuItem(fontName);
-            Font font = new Font(fontName, getFont().getStyle(), getFont().getSize());
-            item.setFont(font);
-            item.addActionListener(e -> Utils.setFontForEach(font, this));
+            item.setFont(new Font(fontName, getFont().getStyle(), getFont().getSize()));
+            item.addActionListener(e -> Utils.updateFontFamily(fontName, this));
             fontFamily.add(item);
         }
 
@@ -302,7 +317,7 @@ public class FifteenPuzzle extends JFrame {
             int size = 12 + i * 4;
             JRadioButtonMenuItem item = new JRadioButtonMenuItem(String.valueOf(size));
             if (getFont().getSize() == size) item.setSelected(true);
-            item.addActionListener(e -> Utils.setFontForEach(new Font(getFont().getName(), getFont().getStyle(), size), this));
+            item.addActionListener(e -> Utils.updateFontSize(size, _boardPanel));
             sizeBTNGroup.add(item);
             fontSize.add(item);
         }
@@ -316,12 +331,16 @@ public class FifteenPuzzle extends JFrame {
         styleBTNGroup.add(bold);
         Utils.addAllTo(fontStyle, plain, bold, italic);
 
-        plain.addActionListener(e -> Utils.updateFontStyle(getFont().getStyle() - Font.BOLD, this));
+        plain.addActionListener(e -> {
+            if (getFont().isBold()) Utils.updateFontStyle(getFont().getStyle() - Font.BOLD, this);
+        });
         Utils.updateFontStyle(Font.PLAIN, plain);
-        bold.addActionListener(e -> Utils.updateFontStyle(getFont().getStyle() + Font.BOLD, this));
+        bold.addActionListener(e -> {
+            if (getFont().isPlain() || getFont().isItalic()) Utils.updateFontStyle(getFont().getStyle() + Font.BOLD, this);
+        });
         Utils.updateFontStyle(Font.BOLD, bold);
         italic.addActionListener(e -> {
-            if (italic.isSelected()) Utils.updateFontStyle(getFont().getStyle() + Font.ITALIC, this);
+            if (!getFont().isItalic()) Utils.updateFontStyle(getFont().getStyle() + Font.ITALIC, this);
             else Utils.updateFontStyle(getFont().getStyle() - Font.ITALIC, this);
         });
         Utils.updateFontStyle(Font.ITALIC, italic);
@@ -349,7 +368,9 @@ public class FifteenPuzzle extends JFrame {
                           "ITMO University.\n" +
                           "2020\n";
         about.addActionListener(e -> JOptionPane.showMessageDialog(null, aboutMSG, about.getText(), JOptionPane.QUESTION_MESSAGE));
+        about.setMnemonic(KeyEvent.VK_A);
         howToPlay.addActionListener(e -> JOptionPane.showMessageDialog(null, "I dunno ¯\\_(ツ)_/¯\nBut you can use mouse and arrows", howToPlay.getText(), JOptionPane.ERROR_MESSAGE));
+        howToPlay.setMnemonic(KeyEvent.VK_H);
 
         return jMenuBar;
     }
