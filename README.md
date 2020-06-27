@@ -2,7 +2,7 @@
 
 The simple 15-puzzle game, based on Swing/AWT libraries.
 
-To play this game just run FifteenPuzzle.jar
+To play this game - just run FifteenPuzzle.jar
 You can download the latest release [just by click here](https://github.com/gosvoh/SwingAWT-Lab/releases/latest)
 
 Features:
