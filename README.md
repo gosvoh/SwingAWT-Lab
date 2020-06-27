@@ -14,4 +14,4 @@ Features:
 <img src="https://i.imgur.com/4F5lzyi.png" alt="">
 - You can play by using your mouse or by using keyboard arrows
 
-Have fun!
+## Have fun!
