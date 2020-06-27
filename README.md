@@ -11,7 +11,7 @@ Features:
 - Configurable app size
 <img src="https://i.imgur.com/HccIGtJ.png" alt="">
 - A configurable font for the field (some fonts can be missing on your PC)
-<int src="https://i.imgur.com/4F5lzyi.png" alt="">
+<img src="https://i.imgur.com/4F5lzyi.png" alt="">
 - You can play by using your mouse or by using keyboard arrows
 
 Have fun!
